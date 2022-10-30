@@ -1,0 +1,55 @@
+/*
+ *  Publish library
+ */
+apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+
+// add your repository url
+def repository =
+
+
+android.publishing {
+    singleVariant("release") {
+        withSourcesJar()
+        withJavadocJar()
+    }
+}
+
+afterEvaluate {
+    publishing {
+        repositories {
+            maven {
+                url = repository
+                credentials {
+                    username ARTIFACTORY_USER
+                    password ARTIFACTORY_PASSWORD
+                }
+            }
+        }
+        publications {
+            // 创建名为aar的maven出版物，
+            aar(MavenPublication) {
+                // 发布内容 构建变体
+                from components.release
+                // 发布群组id，一般为包名
+                groupId = "com.google.android"
+                // 发布名
+                artifactId = "toolkit"
+                // 描述
+                description = "RenderScript intrinsics replacement toolki"
+                // 版本号
+                version = '0.8-beta'
+            }
+        }
+    }
+}
+
+def getGitHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'describe', '--tags'
+        standardOutput = stdout
+    }
+    println(stdout.toString().trim())
+    return stdout.toString().trim()
+}
